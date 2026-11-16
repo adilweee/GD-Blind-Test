@@ -285,7 +285,10 @@
       const { error: clanControlsError } = await cloud.from('clans').select('join_policy,member_limit').limit(0);
       clanControlsReady = !clanControlsError;
       await refreshCloudState();
-      cloud.auth.onAuthStateChange(() => setTimeout(refreshCloudState, 0));
+      cloud.auth.onAuthStateChange((event) => setTimeout(() => {
+        if (event === 'SIGNED_IN') setPage('profile');
+        refreshCloudState();
+      }, 0));
     } catch (error) {
       cloud = null;
       $('#authStatus').textContent = 'Supabase ayarı geçersiz';
@@ -701,11 +704,11 @@
         if (configuredSite) {
           const callback = new URL(configuredSite);
           if (callback.protocol === 'https:' || (callback.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(callback.hostname))) {
-            callback.hash = 'profile';
+            callback.hash = '';
             emailRedirectTo = callback.toString();
           }
         } else if (location.protocol === 'https:' || (location.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(location.hostname))) {
-          emailRedirectTo = `${location.origin}${location.pathname}#profile`;
+          emailRedirectTo = `${location.origin}${location.pathname}`;
         }
         result = await cloud.auth.signUp({ email, password, options: { data: { username, gd_name: $('#profileGdNameInput').value.trim() }, ...(emailRedirectTo ? { emailRedirectTo } : {}) } });
       } else result = await cloud.auth.signInWithPassword({ email, password });
