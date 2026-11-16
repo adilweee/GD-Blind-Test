@@ -119,4 +119,3 @@ from totals;
 grant execute on function public.create_clan_invite(uuid), public.join_clan_by_invite(text), public.join_open_clan(uuid), public.update_clan_settings(uuid,text,integer), public.set_clan_member_role(uuid,uuid,text), public.remove_clan_member(uuid,uuid) to authenticated;
 revoke all on function public.create_clan_invite(uuid), public.join_clan_by_invite(text), public.join_open_clan(uuid), public.update_clan_settings(uuid,text,integer), public.set_clan_member_role(uuid,uuid,text), public.remove_clan_member(uuid,uuid) from public, anon;
 
-

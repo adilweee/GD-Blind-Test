@@ -5,4 +5,3 @@ window.GDBT_SUPABASE = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppZW9qcXBhY3N1bWR6cGxrYWV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4MTQyNDcsImV4cCI6MjExMDM5MDI0N30.4NCjvdyNuvnOoI1S9ziN1NuGDLyybSPYyfZhOI3-j5o', // publishable/anon public key
 };
 
-

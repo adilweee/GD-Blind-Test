@@ -223,4 +223,3 @@ from public.profiles;
 grant select on public.clan_leaderboard, public.player_leaderboard to anon, authenticated;
 grant execute on function public.create_clan(text,text), public.create_clan_invite(uuid), public.join_clan_by_invite(text), public.leave_clan(uuid), public.submit_game_session(integer,integer,integer), public.submit_duel_result(text,integer,integer), public.delete_my_account() to authenticated;
 revoke all on function public.create_clan(text,text), public.create_clan_invite(uuid), public.join_clan_by_invite(text), public.leave_clan(uuid), public.submit_game_session(integer,integer,integer), public.submit_duel_result(text,integer,integer), public.delete_my_account() from public, anon;
-

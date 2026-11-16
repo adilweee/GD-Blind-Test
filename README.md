@@ -38,4 +38,3 @@ Bu klasörün içeriğini (`index.html`, `app.js`, `backend-config.js`, `terms.h
 - GDBrowser topluluk servisi güvenilirlik garantisi vermez; şarkı metadatası ya da ses URL’si eksik olduğunda tur görsel ipucuyla devam eder. Kaynak servisler değişebilir veya kapalı olabilir.
 
 Bu, RobTop Games veya AREDL tarafından işletilmeyen bağımsız bir hayran projesidir. Üçüncü taraf içeriklerin hakları ilgili sahiplerinde kalır.
-
