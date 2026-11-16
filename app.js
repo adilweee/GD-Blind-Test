@@ -55,6 +55,7 @@
   let cloudUser = null;
   let cloudProfile = null;
   let onlineClan = null;
+  let clanControlsReady = false;
   let activeClanDetails = null;
   let clanDirectory = [];
   let clanDirectoryLimit = 50;
@@ -121,10 +122,11 @@
     $('#clanCreateCard').hidden = hasClan;
     $('#clanManageCard').hidden = !hasClan;
     $('#copyClanInvite').hidden = Boolean(cloud);
-    const canManage = cloud && ['leader', 'co_owner'].includes(onlineClan?.role);
-    $('#createOnlineInvite').hidden = !canManage;
+    const canInvite = cloud && (onlineClan?.role === 'leader' || (clanControlsReady && onlineClan?.role === 'co_owner'));
+    const canManage = cloud && clanControlsReady && ['leader', 'co_owner'].includes(onlineClan?.role);
+    $('#createOnlineInvite').hidden = !canInvite;
     $('#clanSettingsForm').hidden = !canManage;
-    $('#clanDetailInvite').hidden = Boolean(cloud && (!canManage || activeClanDetails?.id !== onlineClan?.id));
+    $('#clanDetailInvite').hidden = Boolean(cloud && (!canInvite || activeClanDetails?.id !== onlineClan?.id));
     if (hasClan) {
       $('#clanDisplayName').textContent = activeClan.name;
       $('#clanDisplayTag').textContent = `[${activeClan.tag}]`;
@@ -133,7 +135,7 @@
         $('#clanInviteOutput').value = `${location.href.split('#')[0]}#join=${token}`;
       }
       $('#clanBackendNote').textContent = cloud ? `${onlineClan.role === 'leader' ? 'Lider' : onlineClan.role === 'co_owner' ? 'Co-owner' : 'Üye'} · çevrimiçi clan · davet kodları 30 gün geçerli.` : 'Yerel mod: bu clan dünya listesine eklenmez.';
-      $('#clanAdmissionSummary').textContent = cloud ? `${onlineClan.join_policy === 'open' ? 'Herkese açık katılım' : 'Sadece davetle katılım'} · ${onlineClan.member_count || 1} / ${onlineClan.member_limit || 50} üye` : 'Yerel clan ayarları çevrimiçi değildir.';
+      $('#clanAdmissionSummary').textContent = cloud ? (clanControlsReady ? `${onlineClan.join_policy === 'open' ? 'Herkese açık katılım' : 'Sadece davetle katılım'} · ${onlineClan.member_count || 1} / ${onlineClan.member_limit || 50} üye` : 'Yeni clan ayarları için Supabase’te 202611160002 migration dosyasını çalıştır.') : 'Yerel clan ayarları çevrimiçi değildir.';
       if (canManage) {
         $('#clanJoinPolicy').value = onlineClan.join_policy || 'invite';
         $('#clanMemberLimit').value = onlineClan.member_limit || 50;
@@ -164,7 +166,7 @@
       $('#loadMoreClans').hidden = true;
       return;
     }
-    status.textContent = `${clanDirectory.length}${clanSearchTerm ? ' eşleşen' : '+'} çevrimiçi clan · toplam puana göre sıralı`;
+    status.textContent = `${clanDirectory.length}${clanSearchTerm ? ' eşleşen' : '+'} çevrimiçi clan · toplam puana göre sıralı${clanControlsReady ? '' : ' · co-owner ve katılım ayarları için yeni SQL migration gerekli'}`;
     $('#loadMoreClans').hidden = Boolean(clanSearchTerm) || clanDirectory.length < clanDirectoryLimit;
     list.innerHTML = clanDirectory.map((clan) => `
       <button class="clan-directory-row" type="button" data-clan-id="${esc(clan.id)}">
@@ -200,7 +202,7 @@
       const owner = viewerRole === 'leader';
       const coOwner = viewerRole === 'co_owner';
       let controls = '';
-      if (!self && owner && member.role !== 'leader') controls = `<button class="roster-action" data-role-target="${esc(member.user_id)}" data-next-role="${member.role === 'co_owner' ? 'member' : 'co_owner'}">${member.role === 'co_owner' ? 'ÜYELİĞE AL' : 'CO-OWNER YAP'}</button><button class="roster-action danger" data-kick-member="${esc(member.user_id)}">ÇIKAR</button>`;
+      if (clanControlsReady && !self && owner && member.role !== 'leader') controls = `<button class="roster-action" data-role-target="${esc(member.user_id)}" data-next-role="${member.role === 'co_owner' ? 'member' : 'co_owner'}">${member.role === 'co_owner' ? 'ÜYELİĞE AL' : 'CO-OWNER YAP'}</button><button class="roster-action danger" data-kick-member="${esc(member.user_id)}">ÇIKAR</button>`;
       else if (!self && coOwner && member.role === 'member') controls = `<button class="roster-action danger" data-kick-member="${esc(member.user_id)}">ÇIKAR</button>`;
       return `<div class="clan-roster-row"><span>${esc(member.profiles?.username || 'Oyuncu')} ${member.role === 'leader' ? '<small class="muted">· LİDER</small>' : member.role === 'co_owner' ? '<small class="muted">· CO-OWNER</small>' : ''}${self ? '<small class="muted"> · SEN</small>' : ''}<small class="muted">${member.profiles?.gd_name ? ` · GD: ${esc(member.profiles.gd_name)}` : ''}</small></span>
       <b>${Number(member.profiles?.total_points || 0).toLocaleString('tr-TR')}</b><span>${Number(member.profiles?.total_correct || 0).toLocaleString('tr-TR')}</span><span class="roster-controls">${controls}</span></div>`;
@@ -250,9 +252,9 @@
     }
     const { data: membership } = await cloud.from('clan_members').select('clan_id,role,joined_at').eq('user_id', cloudUser.id).maybeSingle();
     if (membership) {
-      const { data: clan } = await cloud.from('clans').select('id,name,tag,owner_id,created_at,join_policy,member_limit').eq('id', membership.clan_id).maybeSingle();
+      const { data: clan } = await cloud.from('clans').select('id,name,tag,owner_id,created_at').eq('id', membership.clan_id).maybeSingle();
       const { data: clanStats } = await cloud.from('clan_leaderboard').select('member_count,total_points,world_rank').eq('id', membership.clan_id).maybeSingle();
-      onlineClan = clan ? { ...clan, ...clanStats, role: membership.role } : null;
+      onlineClan = clan ? { ...clan, ...clanStats, join_policy: clanControlsReady ? undefined : 'invite', member_limit: 50, role: membership.role } : null;
     } else onlineClan = null;
     renderProfile(); renderClan();
     await Promise.all([loadClanDirectory(), loadPlayerRank()]);
@@ -280,6 +282,8 @@
       }
       if (!window.supabase?.createClient) throw Error('Supabase SDK içinde createClient bulunamadı.');
       cloud = window.supabase.createClient(config.url, config.anonKey);
+      const { error: clanControlsError } = await cloud.from('clans').select('join_policy,member_limit').limit(0);
+      clanControlsReady = !clanControlsError;
       await refreshCloudState();
       cloud.auth.onAuthStateChange(() => setTimeout(refreshCloudState, 0));
     } catch (error) {
@@ -769,7 +773,7 @@
   };
   $('#clanSettingsForm').addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!cloud || !onlineClan) return;
+      if (!cloud || !onlineClan || !clanControlsReady) { toast('Önce Supabase’te 202611160002 clan migration dosyasını çalıştır.'); return; }
     const policy = $('#clanJoinPolicy').value;
     const memberLimit = Number($('#clanMemberLimit').value);
     if (!Number.isInteger(memberLimit) || memberLimit < 2 || memberLimit > 100) { toast('Üye kapasitesi 2 ile 100 arasında olmalı.'); return; }
@@ -806,7 +810,7 @@
   $('#clanRoster').addEventListener('click', async (event) => {
     const roleButton = event.target.closest('[data-role-target]');
     const kickButton = event.target.closest('[data-kick-member]');
-    if (!cloud || !activeClanDetails || (!roleButton && !kickButton)) return;
+    if (!cloud || !clanControlsReady || !activeClanDetails || (!roleButton && !kickButton)) return;
     let error;
     if (roleButton) ({ error } = await cloud.rpc('set_clan_member_role', { p_clan_id: activeClanDetails.id, p_member_id: roleButton.dataset.roleTarget, p_role: roleButton.dataset.nextRole }));
     if (kickButton) {

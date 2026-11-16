@@ -20,7 +20,7 @@ AREDL seviyelerini görsel veya kısa ses ipuçlarıyla tahmin ettiğin Geometry
 ## Çevrimiçi clan, hesap ve dünya sıralaması
 
 1. Supabase’te bir proje oluştur.
-2. Sırasıyla `supabase/migrations/202611160001_online_clans_duels.sql` ve `supabase/migrations/202611160002_clan_controls.sql` dosyalarını Supabase SQL Editor’de çalıştır. İkinci migration co-owner rolleri, katılım modu ve 100 üyeye kadar kapasiteyi ekler.
+2. Yeni Supabase kurulumunda iki migration’ı sırayla çalıştır. İlk clan migration’ı zaten uygulandıysa yalnızca `supabase/migrations/202611160002_clan_controls.sql` dosyasını Supabase SQL Editor’de çalıştır. Bu ikinci migration co-owner rolleri, katılım modu ve 100 üyeye kadar kapasiteyi ekler.
 3. `backend-config.js` içindeki `url` alanına Project URL’yi, `anonKey` alanına publishable/anon public key’i yaz. `siteUrl` alanına yayımlanmış HTTPS adresini yazarsan, localhost üzerinden kayıt açılsa bile doğrulama e-postası yayın adresine döner. `service_role` anahtarını web uygulamasına koyma.
 4. Supabase Dashboard → Authentication → URL Configuration içinde Site URL’yi yayın adresin yap ve Redirect URLs listesine bu adresi (gerekirse `http://localhost:.../**` test adresini de) ekle. E-posta şablonundaki yönlendirme `.RedirectTo` değerini kullanmalı. Ardından e-posta doğrulama ayarını seç. Doğrulama açıksa yeni kullanıcı e-postasındaki linkten hesabı onaylar.
 5. GitHub Pages’e yayımlamadan önce hesabı, clan oluşturma/davet/katılımı, sıralamayı ve duel sonuç kaydını Supabase projesinde dene.
@@ -38,3 +38,4 @@ Bu klasörün içeriğini (`index.html`, `app.js`, `backend-config.js`, `terms.h
 - GDBrowser topluluk servisi güvenilirlik garantisi vermez; şarkı metadatası ya da ses URL’si eksik olduğunda tur görsel ipucuyla devam eder. Kaynak servisler değişebilir veya kapalı olabilir.
 
 Bu, RobTop Games veya AREDL tarafından işletilmeyen bağımsız bir hayran projesidir. Üçüncü taraf içeriklerin hakları ilgili sahiplerinde kalır.
+
